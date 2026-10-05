@@ -19,7 +19,7 @@ An enterprise incident occurs at Cipher Corp. Participants step into the role of
 ## How to Run
 
 ### Option 1: Live Web Demo (Instant)
-Access the running application directly via [GitHub Pages Demo](https://heiriko.github.io/Cipher-Digital-Forensic-Analysis-Log/).
+Access the running application directly via [GitHub Pages Demo](https://heiriko.github.io/Cipher-DFA-Log/).
 
 ### Option 2: Docker Container (Local Deployment)
 Ensure Docker is installed and running, then execute:
