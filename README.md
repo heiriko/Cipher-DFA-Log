@@ -1,6 +1,6 @@
 #🔍 Cipher: Binus Cyber AI Festival - Interactive Log Analysis Simulation at Digital Forensic Analysis Booth 
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo%20on%20GitHub%20Pages-blue?style=for-the-badge)]([https://heiriko.github.io/Cipher-Digital-Forensic-Analysis-Log/](https://heiriko.github.io/Cipher-DFA-Log/))
+[![Live Demo](https://img.shields.io/badge/Live-Demo%20on%20GitHub%20Pages-blue?style=for-the-badge)]([https://heiriko.github.io/Cipher-Digital-Forensic-Analysis-Log/](https://heiriko.github.io/Cipher-DFA-Log/)
 [![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white)](Dockerfile)
 
 An interactive, browser-based Digital Forensics and Incident Response (DFIR) simulation challenge designed to guide users through identifying real-world attack chains via security telemetry logs.
